@@ -1,0 +1,8 @@
+requests
+pandas
+numpy
+newspaper3k
+Flask
+nltk
+lxml_html_clean
+functions-framework
