@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 
 
-@app.route('/download', methods=['GET'])
+@app.route('/', methods=['GET'])
 def download_gdelt_data():
     nltk.data.path.append("/opt/nltk_data")
     nltk.download('punkt', download_dir="/opt/nltk_data")
