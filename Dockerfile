@@ -26,7 +26,7 @@ RUN pip install -r requirements.txt
 RUN mkdir -p /opt/nltk_data
 
 # Download NLTK data into the custom directory at build time (optional)
-RUN python -m nltk.downloader punkt -d /opt/nifi/nltk_data
+RUN python -m nltk.downloader punkt -d /opt/nltk_data
 
 COPY . .
 
