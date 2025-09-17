@@ -21,21 +21,27 @@ def get_gdelt_update_response():
     return lines
 
 
-def get_update_url(update_urls: str, data_type: str = "export") -> str:
+def get_update_url(update_urls, data_type: str = "export") -> str:
     data_type = data_type.lower()
     valid_types = {"export", "mentions", "gkg"}
-    
+
     if data_type not in valid_types:
         raise ValueError(f"Unknown data_type '{data_type}'. Must be one of {valid_types}")
 
-    for line in update_urls.strip().splitlines():
+    # Accept both string and list
+    if isinstance(update_urls, str):
+        lines = update_urls.strip().splitlines()
+    else:
+        lines = update_urls
+
+    for line in lines:
         if line:
             parts = line.strip().split()
             if len(parts) == 3:
                 url = parts[2]
                 if f".{data_type}." in url.lower():
                     return url
-    
+
     return ""
 
 
