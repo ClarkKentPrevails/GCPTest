@@ -20,6 +20,7 @@ def get_gdelt_update_response():
 
     return lines
 
+
 def get_update_url(update_urls: str, data_type: str = "export") -> str:
     data_type = data_type.lower()
     valid_types = {"export", "mentions", "gkg"}
@@ -36,6 +37,7 @@ def get_update_url(update_urls: str, data_type: str = "export") -> str:
                     return url
     
     return ""
+
 
 def get_export_update(url: str):
     export_content = get_export_file_content(url)
@@ -57,15 +59,3 @@ def load_export_to_gcs(json_data: str, bucket_name: str, filename: str):
     blob.upload_from_string(json_data, content_type='application/json')
 
     return f"gs://{bucket_name}/{filename}"
-
-# def get_mentions(url: str):
-# def get_gkg(url: str):
-    
-    
-def get_reports():
-    gdelt_update_urls = get_gdelt_update_response()
-    
-    get_export_update(get_update_url(gdelt_update_urls, data_type="export"))
-    
-    # get_mentions(get_update_url(gdelt_update_urls, data_type="mentions"))
-    # get_gkg(get_update_url(gdelt_update_urls, data_type="gkg"))

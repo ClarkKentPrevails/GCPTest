@@ -4,6 +4,7 @@ import io
 import pandas as pd
 import numpy as np
 import json
+from google.cloud import storage
 
 from newspaper import Article
 from gdelt_column_names import gdelt_column_names 

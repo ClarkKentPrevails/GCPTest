@@ -1,16 +1,7 @@
 from flask import Flask, jsonify
-from google.cloud import storage
-import json
 import nltk
 import datetime
 import os
-from gdelt_get_export import (
-    get_gdelt_export_update_url,
-    get_export_file_content,
-    unzip_in_memory,
-    csv_to_json,
-    get_article_details
-)
 
 from gdelt_report_handler import (
     get_gdelt_update_response,
