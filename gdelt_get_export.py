@@ -9,21 +9,6 @@ from newspaper import Article
 from gdelt_column_names import gdelt_column_names 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-GDELT_UPDATE_URL = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
-
-def get_gdelt_export_update_url():
-
-    response = requests.get(GDELT_UPDATE_URL)
-    response.raise_for_status()
-    lines = [line.strip() for line in response.text.strip().splitlines() if line.strip()]
-    
-    if not lines:
-        raise ValueError("No lines found in update file.")
-
-    export_url = lines[0].split()[-1]
-    
-    return export_url
-
 def get_export_file_content(export_url):
     response = requests.get(export_url)
     response.raise_for_status()

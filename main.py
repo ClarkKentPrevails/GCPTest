@@ -12,6 +12,13 @@ from gdelt_get_export import (
     get_article_details
 )
 
+from gdelt_report_handler import (
+    get_gdelt_update_response,
+    get_export_update,
+    get_update_url,
+    load_export_to_gcs
+)
+
 app = Flask(__name__)
 
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "gdelt_export_data")
@@ -23,25 +30,22 @@ def download_gdelt_data():
         nltk.download('punkt', download_dir="/opt/nltk_data")
         nltk.download('punkt_tab', download_dir="/opt/nltk_data")
         
-        export_url = get_gdelt_export_update_url()
-        export_content = get_export_file_content(export_url)
-        csv_content = unzip_in_memory(export_content)
-        json_content = csv_to_json(csv_content.decode('utf-8'), limit=50)
-        enriched_json = get_article_details(json_content)
-        json_data = json.dumps(enriched_json, ensure_ascii=False, indent=2)
+        gdelt_update_urls = get_gdelt_update_response()
+    
+        # export
+        export_json_data = get_export_update(get_update_url(gdelt_update_urls, data_type="export"))
+        export_filename = f"export_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+        load_export_to_gcs(export_json_data, BUCKET_NAME, export_filename)
         
-        # Upload to GCS
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(BUCKET_NAME)
-        filename = f"gdelt_export_{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%S')}.json"
-        blob = bucket.blob(filename)
-        blob.upload_from_string(json_data, content_type='application/json')
+        # mentions
+        
+        # gkg
 
         return jsonify({
             "status": "success",
             "bucket": BUCKET_NAME,
-            "filename": filename,
-            "gcs_url": f"gs://{BUCKET_NAME}/{filename}"
+            "export_filename": export_filename,
+            "export_gcs_url": f"gs://{BUCKET_NAME}/{export_filename}"
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
