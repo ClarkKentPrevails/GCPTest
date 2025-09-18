@@ -9,8 +9,8 @@ from newspaper import Article
 from gdelt_column_names import gdelt_column_names 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def get_mention_file_content(mention_url):
-    response = requests.get(mention_url)
+def get_gkg_file_content(gkg_url):
+    response = requests.get(gkg_url)
     response.raise_for_status()
     return response.content  
 
@@ -21,7 +21,7 @@ def unzip_in_memory(zip_content):
                 return f.read()
 
 def csv_to_json(csv_text: str, limit: int = None):
-    column_names = gdelt_column_names["mentions"]
+    column_names = gdelt_column_names["gkg"]
     df = pd.read_csv(io.StringIO(csv_text), delimiter='\t', header=None, names=column_names, engine='python')
     df = df.replace("NaN", np.nan)
     df.replace({np.nan: None}, inplace=True)
@@ -52,7 +52,7 @@ def extract_article_info(url):
         return {"error": str(e)}
         
 def get_article_details(json_data: str):
-    records_with_urls = [(i, record["MentionIdentifier"]) for i, record in enumerate(json_data) if record.get("MentionIdentifier")]
+    records_with_urls = [(i, record["V2DOCUMENTIDENTIFIER"]) for i, record in enumerate(json_data) if record.get("V2DOCUMENTIDENTIFIER")]
 
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = {executor.submit(extract_article_info, url): i for i, url in records_with_urls}
