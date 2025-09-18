@@ -29,14 +29,20 @@ def download_gdelt_data():
         load_export_to_gcs(export_json_data, BUCKET_NAME, export_filename)
         
         # mentions
+        mention_json_data = get_export_update(get_update_url(gdelt_update_urls, data_type="mention"))
+        mention_filename = f"mention_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+        load_export_to_gcs(mention_json_data, BUCKET_NAME, mention_filename)
         
         # gkg
+
 
         return jsonify({
             "status": "success",
             "bucket": BUCKET_NAME,
             "export_filename": export_filename,
-            "export_gcs_url": f"gs://{BUCKET_NAME}/{export_filename}"
+            "export_gcs_url": f"gs://{BUCKET_NAME}/{export_filename}",
+            "mention_filename": mention_filename,
+            "mention_gcs_url": f"gs://{BUCKET_NAME}/{mention_filename}"
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
