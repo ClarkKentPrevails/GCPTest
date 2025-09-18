@@ -62,9 +62,9 @@ def get_update_url(update_urls, data_type: str) -> str:
 
 def get_export_update(export_url: str):
     export_zipped_content = get_export_file_content(export_url)
-    export_csv_content = gkg_unzip_in_memory(export_zipped_content)
-    expoort_json_content = mention_csv_to_json(export_csv_content.decode('utf-8'), limit=50)
-    export_enriched_json = gkg_get_article_details(expoort_json_content)
+    export_csv_content = export_unzip_in_memory(export_zipped_content)
+    expoort_json_content = export_csv_to_json(export_csv_content.decode('utf-8'), limit=50)
+    export_enriched_json = export_get_article_details(expoort_json_content)
     export_json_data = json.dumps(export_enriched_json, ensure_ascii=False, indent=2)
     
     return export_json_data
@@ -81,9 +81,9 @@ def load_export_to_gcs(export_json_data: str, export_bucket_name: str, export_fi
 
 def get_mention_update(url: str):
     mention_zipped_content = get_mention_file_content(url)
-    mention_csv_content = gkg_unzip_in_memory(mention_zipped_content)
+    mention_csv_content = mention_unzip_in_memory(mention_zipped_content)
     mention_json_content = mention_csv_to_json(mention_csv_content.decode('utf-8'), limit=50)
-    mention_enriched_json = gkg_get_article_details(mention_json_content)
+    mention_enriched_json = mention_get_article_details(mention_json_content)
     mention_json_data = json.dumps(mention_enriched_json, ensure_ascii=False, indent=2)
     
     return mention_json_data
@@ -100,7 +100,7 @@ def load_mention_to_gcs(mention_json_data: str, mention_bucket_name: str, mentio
 def get_gkg_update(gkg_url: str):
     gkg_zipped_content = get_gkg_file_content(gkg_url)
     gkg_csv_content = gkg_unzip_in_memory(gkg_zipped_content)
-    gkg_json_content = mention_csv_to_json(gkg_csv_content.decode('utf-8'), limit=50)
+    gkg_json_content = gkg_csv_to_json(gkg_csv_content.decode('utf-8'), limit=50)
     gkg_enriched_json = gkg_get_article_details(gkg_json_content)
     gkg_json_data = json.dumps(gkg_enriched_json, ensure_ascii=False, indent=2)
     
