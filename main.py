@@ -46,7 +46,7 @@ def download_gdelt_data():
             "status": "success",
             "bucket": BUCKET_NAME,
             "export_filename": export_filename,
-            "export_gcs_url": f"gs://{BUCKET_NAME}/{export_filename}",
+            "export_gcs_url": f"gs://{BUCKET_NAME}/{export_filename}"
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
