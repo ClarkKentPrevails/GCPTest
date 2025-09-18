@@ -29,7 +29,7 @@ def download_gdelt_data():
         load_export_to_gcs(export_json_data, BUCKET_NAME, export_filename)
         
         # mentions
-        mention_json_data = get_export_update(get_update_url(gdelt_update_urls, data_type="mention"))
+        mention_json_data = get_export_update(get_update_url(gdelt_update_urls, data_type="mentions"))
         mention_filename = f"mention_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
         load_export_to_gcs(mention_json_data, BUCKET_NAME, mention_filename)
         
