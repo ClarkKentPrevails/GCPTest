@@ -79,8 +79,8 @@ def load_export_to_gcs(export_json_data: str, export_bucket_name: str, export_fi
     return f"gs://{export_bucket_name}/{export_filename}"
 
 
-def get_mention_update(url: str):
-    mention_zipped_content = get_mention_file_content(url)
+def get_mention_update(mention_url: str):
+    mention_zipped_content = get_mention_file_content(mention_url)
     mention_csv_content = mention_unzip_in_memory(mention_zipped_content)
     mention_json_content = mention_csv_to_json(mention_csv_content.decode('utf-8'), limit=50)
     mention_enriched_json = mention_get_article_details(mention_json_content)
