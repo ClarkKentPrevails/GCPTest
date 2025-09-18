@@ -5,9 +5,13 @@ import os
 
 from gdelt_report_handler import (
     get_gdelt_update_response,
-    get_export_update,
     get_update_url,
-    load_export_to_gcs
+    get_export_update,
+    get_mention_update,
+    get_gkg_update,
+    load_export_to_gcs,
+    load_mention_to_gcs,
+    load_gkg_to_gcs
 )
 
 app = Flask(__name__)
@@ -29,12 +33,14 @@ def download_gdelt_data():
         load_export_to_gcs(export_json_data, BUCKET_NAME, export_filename)
         
         # mentions
-        mention_json_data = get_export_update(get_update_url(gdelt_update_urls, data_type="mentions"))
+        mention_json_data = get_mention_update(get_update_url(gdelt_update_urls, data_type="mentions"))
         mention_filename = f"mention_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
-        load_export_to_gcs(mention_json_data, BUCKET_NAME, mention_filename)
+        load_mention_to_gcs(mention_json_data, BUCKET_NAME, mention_filename)
         
         # gkg
-
+        gkg_json_data = get_gkg_update(get_update_url(gdelt_update_urls, data_type="gkg"))
+        gkg_filename = f"gkg_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+        load_gkg_to_gcs(gkg_json_data, BUCKET_NAME, gkg_filename)
 
         return jsonify({
             "status": "success",
@@ -42,7 +48,9 @@ def download_gdelt_data():
             "export_filename": export_filename,
             "export_gcs_url": f"gs://{BUCKET_NAME}/{export_filename}",
             "mention_filename": mention_filename,
-            "mention_gcs_url": f"gs://{BUCKET_NAME}/{mention_filename}"
+            "mention_gcs_url": f"gs://{BUCKET_NAME}/{mention_filename}",
+            "gkg_filename": gkg_filename,
+            "gkg_gcs_url": f"gs://{BUCKET_NAME}/{gkg_filename}"
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
