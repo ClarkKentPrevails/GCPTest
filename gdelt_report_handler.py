@@ -3,10 +3,10 @@ import json
 from google.cloud import storage
 
 from gdelt_get_export import (
-    get_export_file_content,
-    export_unzip_in_memory,
-    export_csv_to_json,
-    export_get_article_details
+    get_file_content,
+    unzip_in_memory,
+    csv_to_json,
+    get_article_details
 )
 
 from gdelt_get_mention import (
@@ -25,7 +25,19 @@ from gdelt_get_gkg import (
 
 GDELT_UPDATE_URL = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
 
-def get_gdelt_update_response():
+def get_article_url_field(report_type: str) -> str:
+    report_type = report_type.lower()
+    
+    if report_type == "export":
+        return "Source_URL"
+    elif report_type == "mentions":
+        return "MentionIdentifier"
+    elif report_type == "gkg":
+        return "V2DOCUMENTIDENTIFIER"
+    else:
+        raise ValueError(f"Unknown report_type '{report_type}'. Must be one of 'export', 'mentions', or 'gkg'.")
+
+def get_gdelt_update_urls():
 
     response = requests.get(GDELT_UPDATE_URL)
     response.raise_for_status()
@@ -36,8 +48,7 @@ def get_gdelt_update_response():
 
     return lines
 
-
-def get_update_url(update_urls, data_type: str) -> str:
+def get_report_url(update_urls, data_type) -> str:
     data_type = data_type.lower()
     valid_types = {"export", "mentions", "gkg"}
 
@@ -59,24 +70,23 @@ def get_update_url(update_urls, data_type: str) -> str:
 
     return ""
 
-
-def get_export_update(export_url: str):
-    export_zipped_content = get_export_file_content(export_url)
-    export_csv_content = export_unzip_in_memory(export_zipped_content)
-    expoort_json_content = export_csv_to_json(export_csv_content.decode('utf-8'), limit=50)
-    export_enriched_json = export_get_article_details(expoort_json_content)
-    export_json_data = json.dumps(export_enriched_json, ensure_ascii=False, indent=2)
+def get_report(url: str, report_type: str):
+    zipped_content = get_file_content(url)
+    csv_content = unzip_in_memory(zipped_content)
+    json_content = csv_to_json(csv_content.decode('utf-8'), 50, report_type)
+    enriched_json = get_article_details(json_content, get_article_url_field(report_type))
+    json_data = json.dumps(enriched_json, ensure_ascii=False, indent=2)
     
-    return export_json_data
+    return json_data
 
 
-def load_export_to_gcs(export_json_data: str, export_bucket_name: str, export_filename: str):
-    export_storage_client = storage.Client()
-    export_bucket = export_storage_client.bucket(export_bucket_name)
-    export_blob = export_bucket.blob(export_filename)
-    export_blob.upload_from_string(export_json_data, content_type='application/json')
+def load_to_gcs(json_data: str, bucket_name: str, filename: str):
+    storage_client = storage.Client()
+    storage_bucket = storage_client.bucket(bucket_name)
+    storage_blob = storage_bucket.blob(filename)
+    storage_blob.upload_from_string(json_data, content_type='application/json')
 
-    return f"gs://{export_bucket_name}/{export_filename}"
+    return f"gs://{bucket_name}/{filename}"
 
 
 def get_mention_update(mention_url: str):

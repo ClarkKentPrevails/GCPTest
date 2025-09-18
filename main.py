@@ -4,53 +4,46 @@ import datetime
 import os
 
 from gdelt_report_handler import (
-    get_gdelt_update_response,
-    get_update_url,
-    get_export_update,
+    get_gdelt_update_urls,
+    get_report_url,
+    get_report,
     get_mention_update,
     get_gkg_update,
-    load_export_to_gcs,
+    load_to_gcs,
     load_mention_to_gcs,
     load_gkg_to_gcs
 )
 
 app = Flask(__name__)
 
-BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "gdelt_export_data")
+BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "gdelt_reports")
 
-@app.route('/', methods=['GET'])
-def download_gdelt_data():
+@app.route('/<report_type>', methods=['GET'])
+def download_gdelt_data(report_type):
     try:
         nltk.data.path.append("/opt/nltk_data")
         nltk.download('punkt', download_dir="/opt/nltk_data")
         nltk.download('punkt_tab', download_dir="/opt/nltk_data")
         
-        gdelt_update_urls = get_gdelt_update_response()
-    
-        # export
-        export_json_data = get_export_update(get_update_url(gdelt_update_urls, data_type="export"))
-        export_filename = f"export_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
-        load_export_to_gcs(export_json_data, BUCKET_NAME, export_filename)
+        valid_report_types = {"export", "mentions", "gkg"}
+        report_type = report_type.lower()
         
-        # mentions
-        mention_json_data = get_mention_update(get_update_url(gdelt_update_urls, data_type="mentions"))
-        mention_filename = f"mention_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
-        load_mention_to_gcs(mention_json_data, BUCKET_NAME, mention_filename)
+        if report_type not in valid_report_types:
+            raise ValueError(f"Unknown data_type '{report_type}'. Must be one of {valid_report_types}")
         
-        # gkg
-        gkg_json_data = get_gkg_update(get_update_url(gdelt_update_urls, data_type="gkg"))
-        gkg_filename = f"gkg_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
-        load_gkg_to_gcs(gkg_json_data, BUCKET_NAME, gkg_filename)
+        gdelt_update_urls = get_gdelt_update_urls()
+        report_url = get_report_url(gdelt_update_urls, data_type=report_type)
+        
+        json_data = get_report(report_url, report_type)
+        filename = f"{report_type}{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+        load_to_gcs(json_data, BUCKET_NAME, filename)
+        
 
         return jsonify({
             "status": "success",
             "bucket": BUCKET_NAME,
-            "export_filename": export_filename,
-            "export_gcs_url": f"gs://{BUCKET_NAME}/{export_filename}",
-            "mention_filename": mention_filename,
-            "mention_gcs_url": f"gs://{BUCKET_NAME}/{mention_filename}",
-            "gkg_filename": gkg_filename,
-            "gkg_gcs_url": f"gs://{BUCKET_NAME}/{gkg_filename}"
+            "filename": filename,
+            "gcs_url": f"gs://{BUCKET_NAME}/{filename}"
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500

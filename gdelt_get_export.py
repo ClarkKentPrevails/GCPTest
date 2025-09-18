@@ -9,19 +9,19 @@ from newspaper import Article
 from gdelt_column_names import gdelt_column_names 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def get_export_file_content(export_url):
-    response = requests.get(export_url)
+def get_file_content(url):
+    response = requests.get(url)
     response.raise_for_status()
     return response.content  
 
-def export_unzip_in_memory(zip_content):
-    with zipfile.ZipFile(io.BytesIO(zip_content), 'r') as zip_ref:
+def unzip_in_memory(zipped_content):
+    with zipfile.ZipFile(io.BytesIO(zipped_content), 'r') as zip_ref:
         for filename in zip_ref.namelist():
             with zip_ref.open(filename) as f:
                 return f.read()
 
-def export_csv_to_json(csv_text: str, limit: int = None):
-    column_names = gdelt_column_names["export"]
+def csv_to_json(csv_text: str, limit: int = None, report_type: str = "export"):
+    column_names = gdelt_column_names[report_type]
     df = pd.read_csv(io.StringIO(csv_text), delimiter='\t', header=None, names=column_names, engine='python')
     df = df.replace("NaN", np.nan)
     df.replace({np.nan: None}, inplace=True)
@@ -33,7 +33,7 @@ def export_csv_to_json(csv_text: str, limit: int = None):
     
     return records
         
-def export_extract_article_info(url):
+def extract_article_info(url):
     article = Article(url)
     try:
         article.download()
@@ -51,11 +51,11 @@ def export_extract_article_info(url):
     except Exception as e:
         return {"error": str(e)}
         
-def export_get_article_details(json_data: str):
-    records_with_urls = [(i, record["Source_URL"]) for i, record in enumerate(json_data) if record.get("Source_URL")]
+def get_article_details(json_data: str, source_url: str = "Source_URL"):
+    records_with_urls = [(i, record[source_url]) for i, record in enumerate(json_data) if record.get(source_url)]
 
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(export_extract_article_info, url): i for i, url in records_with_urls}
+        futures = {executor.submit(extract_article_info, url): i for i, url in records_with_urls}
         for future in as_completed(futures):
             i = futures[future]
             json_data[i]["extracted_news"] = future.result()
