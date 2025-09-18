@@ -7,11 +7,7 @@ from gdelt_report_handler import (
     get_gdelt_update_urls,
     get_report_url,
     get_report,
-    get_mention_update,
-    get_gkg_update,
-    load_to_gcs,
-    load_mention_to_gcs,
-    load_gkg_to_gcs
+    load_to_gcs
 )
 
 app = Flask(__name__)
